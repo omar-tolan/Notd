@@ -1,16 +1,65 @@
 const express = require("express")
+const multer = require("multer")
+const sharp = require("sharp")
 const User = require('../models/users.js')
 const auth = require("../middleware/authentication")
 const router = express.Router()
+
+const upload = multer({
+    limits: {
+        fileSize: 1000000
+    },
+    fileFilter: function(req, file, callback){
+        if(!file.originalname.match(/\.(jpg|png|jpeg)$/)){
+            return callback(new Error("Please upload a picture"))
+        }
+        callback(undefined, true)
+    }
+})
 
 router.post("/users", async (req, res) => {
     try{
         const user = new User(req.body)
         const token = await user.generateAuth()
+        res.cookie('token', token, {
+            httpOnly: true,
+            // secure: true, set this on production
+            sameSite: 'strict'
+        })
         await user.save()
         res.status(201).send({user, token})
     }catch(e){
         res.status(500).send(e)
+    }
+})
+
+router.post("/user/me/avatar", auth, upload.single("avatar"), async (req, res) => {
+    req.user.avatar = await sharp(req.file.buffer).png().resize({
+        width: 250,
+        height: 250
+    }).toBuffer()
+    await req.user.save()
+    res.send()
+}, (error, req, res, next) => {
+    res.status(400).send({error : error.message})
+})
+
+router.delete("user/me/avatar", auth, async (req, res) => {
+    try{
+        req.user.avatar = undefined
+        await req.user.save()
+        res.send()
+    }catch(e){
+        res.status(400).send(e)
+    }
+})
+
+router.get("user/me/avatar", auth, async (req, res) => {
+    try{
+        res.set("Content-Type", "image/png")
+        res.status(200).send(req.user.avatar)
+    }catch(e){
+        res.status(400).send(e)
     }
 })
 
@@ -22,7 +71,12 @@ router.post("/users/login", async (req, res) => {
     try{
         const user = await User.loginUser(req.body.email, req.body.password)
         const token = await user.generateAuth()
-        res.status(200).send({user, token})
+        res.cookie('token', token, {
+            httpOnly: true,
+            // secure: true, set this on production
+            sameSite: 'strict'
+        })
+        res.status(200).send({user, token}) 
     }catch(e){
         res.status(500).send(e)
     }
