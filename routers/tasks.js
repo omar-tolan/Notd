@@ -16,4 +16,13 @@ router.post("/tasks", auth, async (req, res) => {
     }catch(e){
         res.status(500).send(e)
     }
-})  
+})
+
+router.get("/tasks", auth, async (req, res) => {
+    try{
+        
+    }catch(e){
+        res.status(500).send(e)
+    }
+})
+
