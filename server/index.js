@@ -6,7 +6,7 @@ require("./DB/mongoose.js")
 
 const app = express()
 app.use(express.json())
-app.user(cookieParser)
+app.use(cookieParser)
 app.use(userRouter)
 app.use(taskRouter)
 
