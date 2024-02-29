@@ -5,11 +5,10 @@ module.exports = {
   theme: {
     extend: {
       fontFamily: {
-        limelight: ['Limelight'],
-        roboto: ['Roboto']
-      }
+        limelight: ["Limelight"],
+        roboto: ["Roboto"],
+      },
     },
   },
   plugins: [],
-}
-
+};
